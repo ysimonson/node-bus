@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>XHR Test</title>
+    </head>
+    <body>
+        <ul class="output">
+            
+        </ul>
+        
+        <script src="../lib/jquery-1.4.2.min.js" type="text/javascript" charset="UTF-8"></script>
+        <script type="text/javascript" charset="UTF-8">
+            function loadStart(){
+                console.log("LoadStart");
+                console.dir(this);
+                console.dir(arguments);
+                $output.append('<li>LoadStart: '+this.getAllResponseHeaders()+'</li>');
+            }
+            
+            function load(){
+                console.log("Load");
+                console.dir(this);
+                console.dir(arguments);
+                $output.append('<li>Load: '+this.getAllResponseHeaders()+'</li>');
+            }
+            
+            function readyStateChange(){
+                console.log("readyStateChange");
+                console.dir(this);
+                console.dir(arguments);
+                $output.append('<li>ReadyStateChange: '+this.getAllResponseHeaders()+'</li>');
+            }
+            
+            function progress(){
+                console.log("progress");
+                console.dir(this);
+                console.dir(arguments);
+                $output.append('<li>Progress: '+this.getAllResponseHeaders()+'</li>');
+            }
+            
+            var $output = null;
+        
+            $(document).ready(function(){
+                $output = $('.output');
+            
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://localhost:8000/", true);
+                xhr.onreadystatechange = readyStateChange;
+                xhr.onprogress = progress;
+                xhr.onload = load;
+                xhr.onloadstart = loadStart;
+                xhr.send();
+                
+                console.log("Sent request.");
+            });
+        </script>
+    </body>
+</html>

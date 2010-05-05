@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Main Test Application for Node-Bus</title>
+    </head>
+    <body>
+        <h1>Main Test Application for Node-Bus</h1>
+        <h2>Event Management</h2>
+        <form id="eventForm">
+            <fieldset>
+                <legend>Connect to Bus</legend>
+                <label for="connectURL">Node-Bus URL:</label>
+                <input type="text" id="connectURL" size="50" />
+                <button id="connectButton">Connect</button>
+            </fieldset>
+            <fieldset>
+                <legend>Publish Event</legend>
+                <label for="publishEventName">Event Name:</label>
+                <input type="text" id="publishEventName" size="30" />
+                <label for="publishEventDetails">Event Payload:</label>
+                <textarea id="publishEventDetails" size="30" cols="30" rows="4"></textarea>
+                <button id="publishEventButton">Publish</button>
+            </fieldset>
+            <fieldset>
+                <legend>Subscribe to Event</legend>
+                <label for="subscribeEventName">Event Name:</label>
+                <input type="text" id="subscribeEventName" size="30" />
+                <button id="subscribeEventButton">Subscribe</button>
+            </fieldset>
+        </form>
+        
+        <h2>Events Subscribed To</h2>
+        <ul id="subscriptions">
+        </ul>
+        
+        <h2>Events Heard</h2>
+        <table id="eventTable">
+            <thead>
+                <tr>
+                    <td>Event Name</td>
+                    <td>Event Payload</td>
+                    <td>Seen At</td>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+        
+        <script src="../lib/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="../../src/bus.client.js" type="text/javascript" charset="UTF-8"></script>
+        <script type="text/javascript">
+            var bus = null;
+            
+            var $eventTableBody = null;  
+            var $subscriptions = null;
+                  
+            function eventTriggered(event){
+                if(!$eventTableBody){
+                    $eventTableBody = $('#eventTable tbody');
+                }
+                var date = new Date();
+                $eventTableBody.append('<tr><td>'+event.name+'</td><td>'+event.payload+'</td><td>'+date.toString()+'</td></tr>');
+            }
+            
+            $(document).ready(function(){
+                /**
+                 * Setup connect fieldset.
+                 */
+                $("#connectButton").click(function(e){
+                    e.preventDefault();
+                    var busUrl = $("#connectURL").val();
+                    
+                    if(!busUrl){
+                        throw new Error("No bus url entered!");
+                        return;
+                    }
+                    
+                    bus = new Bus(busUrl).startup();
+                });
+                
+                /**
+                 * Setup Publish fieldset.
+                 */
+                $("#publishEventButton").click(function(e){
+                    e.preventDefault();
+                    var eventName = $("#publishEventName").val();
+                    var eventPayload = $("#publishEventDetails").val();
+                    
+                    if(!eventName){
+                        throw new Error("No Event Name specified!");
+                        return;
+                    }
+                    
+                    bus.publish(eventName, eventPayload);
+                });
+                
+                /**
+                 * Setup Subscribe fieldset.
+                 */
+                $("#subscribeEventButton").click(function(e){
+                    e.preventDefault();
+                    var eventName = $("#subscribeEventName").val();
+                    
+                    if(!eventName){
+                        throw new Error("No Event Name specified!");
+                        return;
+                    }
+                    
+                    // subscribe..  bus.subscribe only returns true if the listener is a new listener
+                    if(bus.subscribe(eventName, eventTriggered)){
+                        if(!$subscriptions){
+                            $subscriptions = $('#subscriptions');
+                        }
+                        $subscriptions.append('<li class="subscription">'+eventName+' <a href="#" class="'+eventName+'">Unsubscribe</a></li>');
+                    }
+                });
+                
+                /**
+                 * Handle unsubscriptions
+                 */
+                $("#subscriptions").delegate(".subscription a", "click", function(e){
+                    e.preventDefault();
+                    var $this = $(this);
+                    
+                    var eventName = $this.attr("class");
+                    bus.unsubscribe(eventName, eventTriggered);
+                    $this.parent().remove();
+                });
+            });
+        </script>
+    </body>
+</html>
