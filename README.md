@@ -3,7 +3,7 @@ node-bus
 
 node-bus is a project where the goal is to provide a really simple facility for pubsub-style eventing between clients and between clients and the browser.
 
-The bus framework includes a plugin for jQuery and dojo which make client-side developers' jobs as easy as possible.
+The bus framework includes a client-side javascript tool which handles all of the long-polling COMET requests to make the developer's job as easy as possible.
 
 Running the Test Server
 =======================
