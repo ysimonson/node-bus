@@ -48,7 +48,7 @@
         </table>
         
         <script src="../lib/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
-        <script src="../../src/bus.client.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="../../../src/bus.client.js" type="text/javascript" charset="UTF-8"></script>
         <script type="text/javascript">
             var bus = null;
             
@@ -60,7 +60,7 @@
                     $eventTableBody = $('#eventTable tbody');
                 }
                 var date = new Date();
-                $eventTableBody.append('<tr><td>'+event.name+'</td><td>'+event.payload+'</td><td>'+date.toString()+'</td></tr>');
+                $eventTableBody.append('<tr><td>'+event.name+'</td><td>'+JSON.stringify(event.payload)+'</td><td>'+date.toString()+'</td></tr>');
             }
             
             $(document).ready(function(){
@@ -70,6 +70,8 @@
                 $("#connectButton").click(function(e){
                     e.preventDefault();
                     var busUrl = $("#connectURL").val();
+                    
+                    console.log("Connecting to: ", busUrl);
                     
                     if(!busUrl){
                         throw new Error("No bus url entered!");
@@ -92,7 +94,7 @@
                         return;
                     }
                     
-                    bus.publish(eventName, eventPayload);
+                    bus.publish(eventName, JSON.parse(eventPayload));
                 });
                 
                 /**
