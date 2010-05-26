@@ -9,6 +9,8 @@ var sys = require('sys');
 
 var dirHandler = router.staticDirHandler("../", "", ["index.html"]);
 
+var port = 8000;
+
 http.createServer().addListener('request', function (req, res) {
     var urlobj = url.parse(req.url);
     
@@ -22,5 +24,6 @@ http.createServer().addListener('request', function (req, res) {
         dirHandler(req,res);
     }
     return false;
-}).listen(8080);
-sys.puts('Server running at http://127.0.0.1:8080/');
+}).listen(port);
+sys.puts('Server running at http://127.0.0.1:'+port+'/');
+
