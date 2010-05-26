@@ -13,3 +13,8 @@ Open a console window, and move to the ./tests directory.  Then type
 node testServer.js
 
 Then, to run the "maintest", navigate a browser to http://localhost:8080/tests/clientTests/maintest/  (this final slash is important, because of a fault with node-router, the node framework that the test server uses)
+
+Versions (tags)
+===============
+
+v0.1a - Long-polling support for the client, and functioning server.  Chat example and the maintest test app.
