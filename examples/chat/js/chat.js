@@ -63,13 +63,41 @@
             this.addMessage(event.payload.username, event.payload.message);
         },
         
+        getTimeString: function(){
+            var date = new Date();
+            var hours = date.getHours();
+            var minutes = date.getMinutes();
+            var seconds = date.getSeconds();
+            var ampm = "AM";
+            
+            if(hours >= 12){
+                ampm = "PM";
+                
+                if(hours > 12){
+                    hours = hours - 12;
+                }
+            }
+            
+            if(hours < 10){
+                hours = "0"+hours;
+            }
+            if(minutes < 10){
+                minutes = "0"+minutes;
+            }
+            if(seconds < 10){
+                seconds = "0"+seconds;
+            }
+            
+            return hours+":"+minutes+":"+seconds+" "+ampm;
+        },
+        
         addLoginMessage: function(user){
             // summary:
             //          Adds a login message to the $messages list.
             // user: String
             //          Username of the user to log in.
             
-            this.$messages.prepend('<li><span class="username">'+user+'</span> has logged on.</li>');
+            this.$messages.prepend('<li><span class="time">'+this.getTimeString()+'</span><span class="username '+(user === this.username ? 'me' : '')+'">'+user+'</span> has logged on.</li>');
         },
         
         addMessage: function(user, message){
@@ -80,7 +108,7 @@
             // message: String
             //          Message they posted.
             
-            this.$messages.prepend('<li><span class="username">'+user+'</span> <span class="message">'+message+'</span></li>');
+            this.$messages.prepend('<li><span class="time">'+this.getTimeString()+'</span><span class="username '+(user === this.username ? 'me' : '')+'">'+user+'</span> <span class="message">'+message+'</span></li>');
         }
     };
 

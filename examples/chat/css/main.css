@@ -83,3 +83,25 @@ button {
     padding: 0 10px;
     background-color: #fff;
 }
+
+#chat_messages {
+    list-style-type: none;
+    list-style-image: none;
+    margin:5px;
+    padding: 0;
+}
+
+#chat_messages .username {
+    font-weight: bold;
+    color: #559999;
+}
+
+#chat_messages .username.me{
+    color: #aaccff;
+}
+
+#chat_messages .time {
+    font-size: 12px;
+    padding: 0 10px 0 0;
+    color: #559999;
+}
