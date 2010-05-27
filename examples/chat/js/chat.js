@@ -1,12 +1,12 @@
 (function(){
-    function Chat(url, $messages){
+    function Chat(host, $messages){
         // summary:
         //          Creates a new instance of a Chat client. Assumes that 
         //          bus.client.js is already in the dom.
         // url: (string)
         //          URL (relative or absolute) to the node-bus service.
         
-        this.bus = new Bus(url).startup();
+        this.bus = new Bus(host, '../lib/socket.io/');
         this.$messages = $messages;
         
         this.bus.sub("chat/login", this, this.handleLogin);
@@ -42,7 +42,7 @@
             // event: Object
             //          Event object for chat/login events.
             
-            this.addLoginMessage(event.payload.username);
+            this.addLoginMessage(event.username);
         },
         
         sendMessage: function(message){
@@ -60,7 +60,7 @@
             // event:
             //          Event object for the chat/message events.
             
-            this.addMessage(event.payload.username, event.payload.message);
+            this.addMessage(event.username, event.message);
         },
         
         getTimeString: function(){
