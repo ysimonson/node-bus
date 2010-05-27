@@ -18,5 +18,5 @@ var listener = io.listen(server, {
     onClientMessage: function(message, client) {
         sys.puts('received: ' + message);
         listener.broadcast(message);
-	}
+    }
 });
