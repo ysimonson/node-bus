@@ -8,12 +8,6 @@
         <h2>Event Management</h2>
         <form id="eventForm">
             <fieldset>
-                <legend>Connect to Bus</legend>
-                <label for="connectURL">Node-Bus URL:</label>
-                <input type="text" id="connectURL" size="50" />
-                <button id="connectButton">Connect</button>
-            </fieldset>
-            <fieldset>
                 <legend>Publish Event</legend>
                 <label for="publishEventName">Event Name:</label>
                 <input type="text" id="publishEventName" size="30" />
@@ -47,39 +41,16 @@
             </tbody>
         </table>
         
-        <script src="../lib/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
-        <script src="../../../src/bus.client.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="lib/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="lib/socket.io/socket.io.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="/src/bus.client.js" type="text/javascript" charset="UTF-8"></script>
         <script type="text/javascript">
-            var bus = null;
-            
+            var bus = new Bus('localhost', 'lib/socket.io/');
             var $eventTableBody = null;  
             var $subscriptions = null;
-                  
-            function eventTriggered(event){
-                if(!$eventTableBody){
-                    $eventTableBody = $('#eventTable tbody');
-                }
-                var date = new Date();
-                $eventTableBody.append('<tr><td>'+event.name+'</td><td>'+JSON.stringify(event.payload)+'</td><td>'+date.toString()+'</td></tr>');
-            }
             
-            $(document).ready(function(){
-                /**
-                 * Setup connect fieldset.
-                 */
-                $("#connectButton").click(function(e){
-                    e.preventDefault();
-                    var busUrl = $("#connectURL").val();
-                    
-                    console.log("Connecting to: ", busUrl);
-                    
-                    if(!busUrl){
-                        throw new Error("No bus url entered!");
-                        return;
-                    }
-                    
-                    bus = new Bus(busUrl).startup();
-                });
+            $(function() {
+                $eventTableBody = $('#eventTable tbody');
                 
                 /**
                  * Setup Publish fieldset.
@@ -94,7 +65,13 @@
                         return;
                     }
                     
-                    bus.publish(eventName, JSON.parse(eventPayload));
+                    if(!eventPayload) {
+                        var json = [];
+                    } else {
+                        var json = JSON.parse(eventPayload);
+                    }
+                    
+                    bus.publish(eventName, json);
                 });
                 
                 /**
@@ -110,24 +87,22 @@
                     }
                     
                     // subscribe..  bus.subscribe only returns true if the listener is a new listener
-                    if(bus.subscribe(eventName, eventTriggered)){
-                        if(!$subscriptions){
-                            $subscriptions = $('#subscriptions');
-                        }
-                        $subscriptions.append('<li class="subscription">'+eventName+' <a href="#" class="'+eventName+'">Unsubscribe</a></li>');
-                    }
-                });
-                
-                /**
-                 * Handle unsubscriptions
-                 */
-                $("#subscriptions").delegate(".subscription a", "click", function(e){
-                    e.preventDefault();
-                    var $this = $(this);
+                    var callback = function(payload) {
+                        var date = new Date();
+                        $eventTableBody.append('<tr><td>'+eventName+'</td><td>'+JSON.stringify(payload)+'</td><td>'+date.toString()+'</td></tr>');
+                    };
                     
-                    var eventName = $this.attr("class");
-                    bus.unsubscribe(eventName, eventTriggered);
-                    $this.parent().remove();
+                    var handle = bus.subscribe(eventName, callback);
+                    
+                    if(handle){
+                        if(!$subscriptions) $subscriptions = $('#subscriptions');
+                        $subscriptions.append('<li class="subscription">'+eventName+' <a href="#" class="'+eventName+'">Unsubscribe</a></li>');
+                        $('a.' + eventName).click(function(e) {
+                            e.preventDefault();
+                            bus.unsubscribe(handle);
+                            $(this).parent().remove();
+                        });
+                    }
                 });
             });
         </script>

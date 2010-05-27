@@ -1,180 +1,47 @@
-
-
 ;
 
 (function(){
-    function Bus(url){
-        // summary:
-        //          Main client class for node-bus. Handles both client-side and 
-        //          client-server publish/subscribe functionality in the browser.
-        this.url = url;
+    function Bus(host, ioPath, ioOptions){
+        io.setPath(ioPath);
         
-        // if it ends with a slash, cut it off..
-        if(this.url.charAt(url.length - 1) == "/"){
-            this.url = this.url.substr(0, url.length - 1);
-        }
+        this.socket = new io.Socket(host, ioOptions);
+        this.socket.connect();
+        
+        var self = this;
+        this.socket.addEvent('message', function(data) {
+            var json = JSON.parse(data);
+            self._fireEvent(json[0], json[1]);
+        });
     }
+    
     Bus.prototype = {
-        // url: String
-        //          URL of the endpoint where node-bus is running.  This is the 
-        //          endpoint that will be connected-to for long-polling and will 
-        //          be POSTed to for publishing.
-        url: "",
+        socket: null,
         
         // subscriptions: Object
         //          Map of event names to arrays of callback function/scope 
         //          pairs.
         subscriptions: {},
+        subscriptionIndexCache: {},
         
-        startup: function(){
-            // summary:
-            //          Initializes the long-polling mechanism.
-            // returns:
-            //          Reference to 'this'.
-            
-            
-            var me = this;
-            var xhr = null;
-            function openConnection(){
-                xhr = me._createXHR();
-                
-                xhr.onreadystatechange = listen;
-            
-                // use the date/time suffix for anti-caching.
-                xhr.open("GET", me.url + "?" + (new Date()).getTime(), true);
-                xhr.send();
-            }
-            
-            function listen(){
-                if(xhr.readyState == 4){
-                    var response = xhr.responseText;
-                    openConnection();
-                    
-                    var event = JSON.parse(response);
-                    me._fireEvent(event);
-                }
-            }
-            
-            openConnection();
-            return this;
-        },
-        
-        _fireEvent: function(event){
+        _fireEvent: function(eventName, args){
             // summary:
             //          Fire off the event to the listeners.
-            // event: Object
-            //          Event to fire off.
-            var subs = this.subscriptions[event.name];
-            
-            if(subs && subs.length > 0){
-                for(var i = 0, len = subs.length; i < len; i++){
-                    subs[i].callback.call(subs[i].scope, event);
-                }
-            }
-        },
-        
-        _hasSubscription: function(eventName, scope, callback, removeFlag){
-            // summary: 
-            //          Determines whether or not an event has a subscription 
-            //          with the given function in the specified scope.  Also 
-            //          gives the caller the option to unsubscribe if the 
-            //          subscription does exist.
-            // eventName: String
-            //          Name of the event to connect to.
-            // scope: Object
-            //          Calling-scope of the listener callback.
-            // callback: Function
-            //          Function that is listening for the eventName event.
-            // removeFlag: Boolean (Optional)
-            //          If true, this function will delete and unsubscribe the 
-            //          subscription to the eventName event if it is found.
-            // return:
-            //          True - if the subscription exists. False - otherwise.
-            if(!this.subscriptions[eventName]){
-                this.subscriptions[eventName] = [];
-            }
-            
-            for(var i = 0, len = this.subscriptions[eventName].length; i < len; i++){
-                var sub = this.subscriptions[eventName][i];
-                
-                if(sub.scope === scope && sub.callback === callback){
-                    if(removeFlag === true){
-                        this.subscriptions[eventName].splice(i, 1);
-                        delete sub;
-                    }
-                    return true;
-                }
-            }
-            return false;
-        },
-        
-        _addSubscription: function(eventName, scope, callback){
-            // summary:
-            //          Subscribes a listener to an event.
-            // eventName: String
-            //          Name of the event.
-            // scope: Object
-            //          Calling-scope of the listener callback.
-            // callback: Function
-            //          Function that is listening for the eventName event.
-            
-            if(this._hasSubscription(eventName, scope, callback)){
-                return false;
-            }
-            
-            this.subscriptions[eventName].push({scope: scope, callback: callback});
-            return true;
-        },
-        
-        _removeSubscription: function(eventName, scope, callback){
-            // summary:
-            //          Unsubscribes a listener from an event.
-            // eventName: String
-            //          Name of the event.
-            // scope: Object
-            //          Calling-scope of the listener callback.
-            // callback: Function
-            //          Function that is listening for the eventName event.
-            return this._hasSubscription(eventName, scope, callback, true);
-        },
-        
-        _publishEvent: function(eventName, payload){
-            // summary:
-            //          Publishes an event to the node-bus endpoint.
             // eventName:
             //          Name of the event.
-            // payload:
-            //          Information to pass along with the event.
+            // args: Array
+            //          The arguments to send to subscribers.
+            var subs = this.subscriptions[eventName];
             
-            var xhr = this._createXHR();
-            
-            xhr.onReadyStateChange = function(){
-                if(xhr.readyState == 4){
-                    // bla bla bla
+            if(subs){
+                for(var i = 0, len = subs.length; i < len; i++){
+                    var sub = subs[i];
+                    console.log(sub.callback, sub.scope, args);
+                    sub.callback.apply(sub.scope, args);
                 }
             }
-            
-            xhr.open("POST", this.url, true);
-            xhr.setRequestHeader("Content-type","application/json");
-            xhr.send(JSON.stringify({name: eventName, payload: payload}));
         },
-        
-        _createXHR: function(){
-            // summary:
-            //          creates an XHR object for AJAX...
-            // return:
-            //          In all normal browsers: XMLHttpRequest, 
-            //          IE6: ActiveXObject.
-            var xhr = null;
-            if(window.XMLHttpRequest){
-                xhr = new XMLHttpRequest();
-            } else {
-                xhr = new ActiveXObject("Microsoft.XMLHTTP");
-            }
-            return xhr;
-        },
-        
-        subscribe: function(/* eventName, scope (optional), callback */){
+                
+        subscribe: function(eventName /*, scope (optional), callback */){
             // summary:
             //          Public function, subscribes to an event when given a 
             //          callback and an optional scope for the callback.
@@ -188,7 +55,6 @@
             //          Whether or not the subscription was made.
             var scope = window;
             var callback = null;
-            var eventName = arguments[0];
             
             if(arguments.length == 2){
                 callback = arguments[1];
@@ -199,64 +65,77 @@
                 throw new Error("Bus.subscribe(..) requires two or three arguments: event name, [callback scope,] callback");
             }
             
-            return this._addSubscription(eventName, scope, callback);
+            var id = Math.random();
+            var callee = {scope: scope, callback: callback};
+            
+            var container = this.subscriptions[eventName];
+            if(!container) this.subscriptions[eventName] = container = [];
+            container.push(callee);
+            
+            var indexContainer = this.subscriptionIndexCache[id];
+            if(!indexContainer) this.subscriptionIndexCache[id] = indexContainer = [];
+            indexContainer.push(container.length - 1);
+            
+            return {id: id, eventName: eventName, callee: callee};
         },
-        // Shortcut function for subscribe.
-        sub: function(){ return this.subscribe.apply(this, Array.prototype.slice.call(arguments)); },
         
-        unsubscribe: function(/* eventName, scope (optional), callback */){
+        unsubscribe: function(handle){
             // summary:
-            //          Public function, unsubscribes from an event for a given 
-            //          listener and [optional] scope.
-            // eventName: String
-            //          Name of the event.
-            // scope: Object (Optional)
-            //          Calling-scope of the listener callback.
-            // callback: Function
-            //          Function that is listening for the eventName event.
+            //          Public function, unsubscribes from an event.
+            // handle: Object
+            //          The object to unsubscribe.
             // return:
             //          Whether or not the unsubscribe action was successful.  
             //          If the function and scope were not found as a listener 
             //          to the event, false will be returned.
-            var scope = window;
-            var callback = null;
-            var eventName = arguments[0];
+            var indices = this.subscriptionIndexCache[handle.id];
+            if(!indices) return false;
             
-            if(arguments.length == 2){
-                callback = arguments[1];
-            } else if (arguments.length == 3){
-                scope = arguments[1];
-                callback = arguments[2];
-            } else {
-                throw new Error("Bus.subscribe(..) requires two or three arguments: event name, [callback scope,] callback");
+            var container = this.subscriptions[handle.eventName];
+            if(!container) return false;
+            
+            var callee = handle.callee;
+            
+            for(var i=0, len=indices.length; i<len; i++) {
+                var j = indices[i];
+                if(j >= container.length) continue;
+                var item = container[j];
+                
+                if(item === callee) {
+                    //Performs a hardcore delete to prevent memory leaks
+                    indices.splice(i, 1);
+                    if(indices.length == 0) delete this.subscriptionIndexCache[handle.id];
+                    
+                    container.splice(j, 1);
+                    if(container.length == 0) delete this.subscriptions[handle.eventName];
+                    
+                    delete item;
+                    return true;
+                }
             }
             
-            return this._removeSubscription(eventName, scope, callback);
+            return false;
         },
-        // Shortcut function for unsubscribe.
-        unsub: function(){ return this.unsubscribe.apply(this, Array.prototype.slice.call(arguments)); },
         
-        publish: function(eventName, payload){
+        publish: function(eventName, args){
             // summary:
             //          Publishes an event.
             // eventName:
             //          Name of the event.
-            // payload:
+            // args:
             //          Information for the event. For example, this could be 
             //          the information that goes along with a click event: 
             //          target, x/y coordinates, etc.
             
-            if(eventName == null){
-                eventName = "";
-            }
-            
-            if(payload == null){
-                payload = {};
-            }
-            
-            this._publishEvent(eventName, payload);
+            if(args.constructor != Array) args = [args];
+            this.socket.send(JSON.stringify([eventName, args]));
         },
-        pub: function pub(){ return this.publish.apply(this, Array.prototype.slice.call(arguments)); },
+        
+        // Shortcut function for subscribe.
+        sub: function(){ return this.subscribe.apply(this, Array.prototype.slice.call(arguments)); },
+        // Shortcut function for unsubscribe.
+        unsub: function(){ return this.unsubscribe.apply(this, Array.prototype.slice.call(arguments)); },
+        pub: function pub(){ return this.publish.apply(this, Array.prototype.slice.call(arguments)); }
     };
 
     window.Bus = Bus;
