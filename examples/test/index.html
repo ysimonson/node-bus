@@ -1,0 +1,110 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>Main Test Application for Node-Bus</title>
+    </head>
+    <body>
+        <h1>Main Test Application for Node-Bus</h1>
+        <h2>Event Management</h2>
+        <form id="eventForm">
+            <fieldset>
+                <legend>Publish Event</legend>
+                <label for="publishEventName">Event Name:</label>
+                <input type="text" id="publishEventName" size="30" />
+                <label for="publishEventDetails">Event Payload:</label>
+                <textarea id="publishEventDetails" size="30" cols="30" rows="4"></textarea>
+                <button id="publishEventButton">Publish</button>
+            </fieldset>
+            <fieldset>
+                <legend>Subscribe to Event</legend>
+                <label for="subscribeEventName">Event Name:</label>
+                <input type="text" id="subscribeEventName" size="30" />
+                <button id="subscribeEventButton">Subscribe</button>
+            </fieldset>
+        </form>
+        
+        <h2>Events Subscribed To</h2>
+        <ul id="subscriptions">
+        </ul>
+        
+        <h2>Events Heard</h2>
+        <table id="eventTable">
+            <thead>
+                <tr>
+                    <td>Event Name</td>
+                    <td>Event Payload</td>
+                    <td>Seen At</td>
+                </tr>
+            </thead>
+            <tbody>
+                
+            </tbody>
+        </table>
+        
+        <script src="../lib/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="../lib/socket.io/socket.io.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="/src/bus.client.js" type="text/javascript" charset="UTF-8"></script>
+        <script type="text/javascript">
+            var bus = new Bus('localhost', '../lib/socket.io/');
+            var $eventTableBody = null;  
+            var $subscriptions = null;
+            
+            $(function() {
+                $eventTableBody = $('#eventTable tbody');
+                
+                /**
+                 * Setup Publish fieldset.
+                 */
+                $("#publishEventButton").click(function(e){
+                    e.preventDefault();
+                    var eventName = $("#publishEventName").val();
+                    var eventPayload = $("#publishEventDetails").val();
+                    
+                    if(!eventName){
+                        throw new Error("No Event Name specified!");
+                        return;
+                    }
+                    
+                    if(!eventPayload) {
+                        var json = [];
+                    } else {
+                        var json = JSON.parse(eventPayload);
+                    }
+                    
+                    bus.publish(eventName, json);
+                });
+                
+                /**
+                 * Setup Subscribe fieldset.
+                 */
+                $("#subscribeEventButton").click(function(e){
+                    e.preventDefault();
+                    var eventName = $("#subscribeEventName").val();
+                    
+                    if(!eventName){
+                        throw new Error("No Event Name specified!");
+                        return;
+                    }
+                    
+                    // subscribe..  bus.subscribe only returns true if the listener is a new listener
+                    var callback = function(payload) {
+                        var date = new Date();
+                        $eventTableBody.append('<tr><td>'+eventName+'</td><td>'+JSON.stringify(payload)+'</td><td>'+date.toString()+'</td></tr>');
+                    };
+                    
+                    var handle = bus.subscribe(eventName, callback);
+                    
+                    if(handle){
+                        if(!$subscriptions) $subscriptions = $('#subscriptions');
+                        $subscriptions.append('<li class="subscription">'+eventName+' <a href="#" class="'+eventName+'">Unsubscribe</a></li>');
+                        $('a.' + eventName).click(function(e) {
+                            e.preventDefault();
+                            bus.unsubscribe(handle);
+                            $(this).parent().remove();
+                        });
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>
