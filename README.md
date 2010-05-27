@@ -12,9 +12,13 @@ Open a console window, and move to the ./examples directory.  Then type
 
 sudo node server.js
 
-Then, navigate a browser to http://localhost:8080/examples/  (this final slash is important, because of a fault with node-router, the node framework that the test server uses)
+Then, navigate a browser to http://localhost:8080/examples/
+
+* Be sure to include the trailing slash in the URL
+* Right now the engine has only been tested on firefox
 
 Versions (tags)
 ===============
 
-v0.1a - Long-polling support for the client, and functioning server.  Chat example and the maintest test app.
+* v0.1a - Long-polling support for the client, and functioning server.  Chat example and the maintest test app.
+* v0.2a - Switched backend engine to use Socket.IO for comet support. This will eventually be phased out.
