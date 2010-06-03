@@ -1,6 +1,4 @@
-;
-
-(function(){
+;(function(){
     function Bus(host, ioPath, ioOptions){
         io.setPath(ioPath);
         
@@ -12,7 +10,7 @@
             var json = JSON.parse(data);
             self._fireEvent(json[0], json[1]);
         });
-    }
+    };
     
     Bus.prototype = {
         socket: null,
@@ -21,7 +19,6 @@
         //          Map of event names to arrays of callback function/scope 
         //          pairs.
         subscriptions: {},
-        subscriptionIndexCache: {},
         
         _fireEvent: function(eventName, args){
             // summary:
@@ -30,12 +27,12 @@
             //          Name of the event.
             // args: Array
             //          The arguments to send to subscribers.
-            var subs = this.subscriptions[eventName];
+            var container = this.subscriptions[eventName];
             
-            if(subs){
-                for(var i = 0, len = subs.length; i < len; i++){
-                    var sub = subs[i];
-                    sub.callback.apply(sub.scope, args);
+            if(container) {
+                for(var i = 0, len = container.length; i < len; i++){
+                    var sub = container[i];
+                    sub[2].apply(sub[1], args);
                 }
             }
         },
@@ -64,8 +61,7 @@
                 throw new Error("Bus.subscribe(..) requires two or three arguments: event name, [callback scope,] callback");
             }
             
-            var id = Math.random();
-            var callee = {scope: scope, callback: callback};
+            var callee = [Math.random(), scope, callback];
             
             var container = this.subscriptions[eventName];
             if(!container) {
@@ -80,12 +76,7 @@
             }
             
             container.push(callee);
-            
-            var indexContainer = this.subscriptionIndexCache[id];
-            if(!indexContainer) this.subscriptionIndexCache[id] = indexContainer = [];
-            indexContainer.push(container.length - 1);
-            
-            return {id: id, eventName: eventName, callee: callee};
+            return {eventName: eventName, callee: callee};
         },
         
         unsubscribe: function(handle){
@@ -97,25 +88,17 @@
             //          Whether or not the unsubscribe action was successful.  
             //          If the function and scope were not found as a listener 
             //          to the event, false will be returned.
-            var indices = this.subscriptionIndexCache[handle.id];
-            if(!indices) return false;
-            
             var container = this.subscriptions[handle.eventName];
             if(!container) return false;
             
             var callee = handle.callee;
             
-            for(var i=0, len=indices.length; i<len; i++) {
-                var j = indices[i];
-                if(j >= container.length) continue;
-                var item = container[j];
+            for(var i=0, len=container.length; i<len; i++) {
+                var item = container[i];
                 
                 if(item === callee) {
-                    //Performs a hardcore delete to prevent memory leaks
-                    indices.splice(i, 1);
-                    if(indices.length == 0) delete this.subscriptionIndexCache[handle.id];
+                    container.splice(i, 1);
                     
-                    container.splice(j, 1);
                     if(container.length == 0) {
                         //There are no callbacks listening to this event; notify
                         //the server
@@ -124,6 +107,7 @@
                             'event': handle.eventName
                         }));
                     
+                        //Perform a hard-core delete to prevent memory leaks
                         delete this.subscriptions[handle.eventName];
                     }
                     
@@ -131,7 +115,7 @@
                     return true;
                 }
             }
-            
+                
             return false;
         },
         
@@ -144,7 +128,6 @@
             //          Information for the event. For example, this could be 
             //          the information that goes along with a click event: 
             //          target, x/y coordinates, etc.
-            
             if(args.constructor != Array) args = [args];
             this.socket.send(JSON.stringify([eventName, args]));
         },
