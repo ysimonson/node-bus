@@ -21,4 +21,4 @@ Versions (tags)
 ===============
 
 * v0.1a - Long-polling support for the client, and functioning server.  Chat example and the maintest test app.
-* v0.2a - Switched backend engine to use Socket.IO for comet support. This will eventually be phased out.
+* v0.2a - Adding support for WebSocket graceful degradation to longpolling.

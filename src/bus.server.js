@@ -34,7 +34,28 @@ function service(request, response){
     // returns:
     //          Nothing.
     
-    longPollingBus(request, response);
+    if(request.method === "GET"){
+        longPollingBus(request, response);
+    } else if (request.method === "POST"){
+        var data = [];
+        
+        // listen for data events so we can collect the data.
+        request.addListener('data', function(chunk){
+            data.push(chunk);
+        });
+        
+        request.addListener('end', function(chunk){
+            sys.puts("Connection end.");
+            var fullData = data.join('');
+            
+            var event = JSON.parse(fullData);
+            
+            EventManager.publishEvent(event);
+        });
+        
+        response.writeHead(200);
+        response.end();
+    }
     return false;
 }
 
