@@ -35,7 +35,6 @@
             if(subs){
                 for(var i = 0, len = subs.length; i < len; i++){
                     var sub = subs[i];
-                    console.log(sub.callback, sub.scope, args);
                     sub.callback.apply(sub.scope, args);
                 }
             }
@@ -69,7 +68,17 @@
             var callee = {scope: scope, callback: callback};
             
             var container = this.subscriptions[eventName];
-            if(!container) this.subscriptions[eventName] = container = [];
+            if(!container) {
+                //This is the first subscription to this event; notify the
+                //server that we're now interested in this event
+                this.socket.send(JSON.stringify({
+                    'type': 'listen',
+                    'event': eventName
+                }));
+                
+                this.subscriptions[eventName] = container = [];
+            }
+            
             container.push(callee);
             
             var indexContainer = this.subscriptionIndexCache[id];
@@ -107,7 +116,16 @@
                     if(indices.length == 0) delete this.subscriptionIndexCache[handle.id];
                     
                     container.splice(j, 1);
-                    if(container.length == 0) delete this.subscriptions[handle.eventName];
+                    if(container.length == 0) {
+                        //There are no callbacks listening to this event; notify
+                        //the server
+                        this.socket.send(JSON.stringify({
+                            'type': 'unlisten',
+                            'event': handle.eventName
+                        }));
+                    
+                        delete this.subscriptions[handle.eventName];
+                    }
                     
                     delete item;
                     return true;
