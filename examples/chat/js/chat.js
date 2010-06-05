@@ -6,7 +6,7 @@
         // url: (string)
         //          URL (relative or absolute) to the node-bus service.
         
-        this.bus = new Bus(host, '../lib/socket.io/');
+        this.bus = new Bus(host);
         this.$messages = $messages;
         
         this.bus.sub("chat/login", this, this.handleLogin);

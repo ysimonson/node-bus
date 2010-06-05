@@ -28,14 +28,13 @@
         </div>
         
         <script src="../lib/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
-        <script src="../lib/socket.io/socket.io.js" type="text/javascript" charset="UTF-8"></script>
         <script src="/src/bus.client.js" type="text/javascript" charset="UTF-8"></script>
         <script type="text/javascript" src="./js/chat.js"></script>
         <script type="text/javascript">
             var chatClient = null;
             
             $(function(){
-                chatClient = new Chat("localhost", $("#chat_messages"));
+                chatClient = new Chat("http://localhost:8080/nodebus", $("#chat_messages"));
             
                 $("#login_form").submit(function(e){
                     e.preventDefault();

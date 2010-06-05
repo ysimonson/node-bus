@@ -1,26 +1,159 @@
 ;(function(){
-    function Bus(host, ioPath, ioOptions){
-        io.setPath(ioPath);
+    var protocolPattern = /^(http|ws|wss|https):\/\//;
+
+    function Bus(busUrl){
+        this.url = busUrl;
         
-        this.socket = new io.Socket(host, ioOptions);
-        this.socket.connect();
+        var protocolMatch = protocolPattern.exec(this.url)[1];
         
-        var self = this;
-        this.socket.addEvent('message', function(data) {
-            var json = JSON.parse(data);
-            self._fireEvent(json[0], json[1]);
-        });
+        // do browser detection.
+        if(window.WebSocket){
+            this.websocket = true;
+            if(protocolMatch === "https"){
+                this.url = this.url.replace(protocolPattern, "wss://");
+            } else if(protocolMatch === "http"){
+                this.url = this.url.replace(protocolPattern, "ws://");
+            }
+        } else {
+            if(protocolMatch === "wss"){
+                this.url = this.url.replace(protocolPattern, "https://");
+            } else if(protocolMatch === "ws"){
+                this.url = this.url.replace(protocolPattern, "http://");
+            }
+            this.websocket = false;
+        }
+        
+        this.initialize();
     };
     
     Bus.prototype = {
-        socket: null,
         
         // subscriptions: Object
         //          Map of event names to arrays of callback function/scope 
         //          pairs.
         subscriptions: {},
         
-        _fireEvent: function(eventName, args){
+        initialize: function(){
+            // summary:
+            //          Sets up the client. 
+            // description:
+            //          Depending on whether or not we're using WebSockets or 
+            //          long-polling, this will set up the long-polling or 
+            //          socket accordingly.
+            
+            var me = this;
+            
+            if(this.websocket){
+                this.socket = new WebSocket(this.url);
+                this.socket.addEventListener("message", function(message){
+                    var jsonEvent = message.data;
+                    var event = JSON.parse(jsonEvent);
+                    
+                    me._fireEvent(event.name, event.payload);
+                });
+                this.socket.addEventListener("error", function(error){
+                    // handle the error, then try to reconnect.
+                    
+                    if(me.errors == null){
+                        me.errors = 0;
+                    }
+                    me.errors++;
+                    
+                    if(window.console){
+                        console.error("An error occurred with the WebSocket, reconnecting in "+(me.errors*me.errors)+" seconds.");
+                    }
+                    setTimeout(me.initialize, 1000 * me.errors * me.errors);
+                });
+                this.socket.addEventListener("close", function(){
+                    setTimeout(me.initialize, 1000);
+                });
+            } else {
+                // set up the long-polling mechanisms.
+            
+                var xhr = null;
+                function openConnection(){
+                    // summary:
+                    //          Opens a GET connection to the server. This will 
+                    //          start the long-polling request.
+                    
+                    xhr = me._createXHR();
+                    
+                    xhr.onreadystatechange = listen;
+                
+                    // use the date/time suffix for anti-caching and use the 
+                    //  lastEventId to 'catch up' with events we missed.
+                    
+                    var queryString = "";
+                    
+                    if(me._lastEventId != null){
+                        queryString = "?lastEventId="+me._lastEventId+"&" + (new Date()).getTime();
+                    } else {
+                        queryString = "?" + (new Date()).getTime();
+                    }
+                    
+                    // start the connection.
+                    xhr.open("GET", me.url + queryString, true);
+                    xhr.send();
+                }
+                
+                function listen(){
+                    // summary:
+                    //          Handles the response for the long-polling 
+                    //          request.
+                    
+                    if(xhr.readyState == 4){
+                        var response = xhr.responseText;
+                        
+                        // Unlike for websockets, the longpolling responses come 
+                        //  back as an array. Parse it here.
+                        var eventArray = JSON.parse(response);
+                        
+                        // Iterate through the events and fire them all out.
+                        for(var i = 0, len = eventArray.length; i < len; i++){
+                            me._fireEvent(eventArray[i].name, eventArray[i].payload);
+                        }
+                        
+                        // Grab the lastEventId.
+                        me._lastEventId = eventArray[eventArray.length-1].id;
+                        
+                        // Reopen the connection immediately.
+                        openConnection();
+                    }
+                }
+                
+                // Start long-polling.
+                openConnection();
+            }
+        },
+        
+        _sendEvent: function(event){
+            // summary:
+            //          Sends an event to the server.
+            // description:
+            //          If we are using websockets, it will simply call .send on 
+            //          this.socket, otherwise we'll do an XHR POST request to 
+            //          the url with the data.
+            // event: Object
+            //          Javascript Object that represents an event.
+            
+            if(this.websocket){
+                this.socket.send(JSON.stringify(event));
+            } else {
+                var xhr = this._createXHR();
+                
+                xhr.onReadyStateChange = function(){
+                    if(xhr.readyState == 4){
+                        // bla bla bla
+                    }
+                }
+                
+                xhr.open("POST", this.url, true);
+                xhr.setRequestHeader("Content-type","application/json");
+                xhr.send(JSON.stringify(event));
+            }
+        },
+        
+        _fireEvent: function(eventName, payload){
             // summary:
             //          Fire off the event to the listeners.
             // eventName:
@@ -32,12 +165,27 @@
             if(container) {
                 for(var i = 0, len = container.length; i < len; i++){
                     var sub = container[i];
-                    sub[2].apply(sub[1], args);
+                    sub[1].apply(sub[0], [payload]);
                 }
             }
         },
+        
+        _createXHR: function(){
+            // summary:
+            //          creates an XHR object for AJAX...
+            // return:
+            //          In all normal browsers: XMLHttpRequest, 
+            //          IE6: ActiveXObject.
+            var xhr = null;
+            if(window.XMLHttpRequest){
+                xhr = new XMLHttpRequest();
+            } else {
+                xhr = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            return xhr;
+        },
                 
-        subscribe: function(eventName /*, scope (optional), callback */){
+        subscribe: function(eventName /*, scope (optional), callback*/){
             // summary:
             //          Public function, subscribes to an event when given a 
             //          callback and an optional scope for the callback.
@@ -61,17 +209,10 @@
                 throw new Error("Bus.subscribe(..) requires two or three arguments: event name, [callback scope,] callback");
             }
             
-            var callee = [Math.random(), scope, callback];
+            var callee = [scope, callback];
             
             var container = this.subscriptions[eventName];
             if(!container) {
-                //This is the first subscription to this event; notify the
-                //server that we're now interested in this event
-                this.socket.send(JSON.stringify({
-                    'type': 'listen',
-                    'event': eventName
-                }));
-                
                 this.subscriptions[eventName] = container = [];
             }
             
@@ -119,23 +260,24 @@
             return false;
         },
         
-        publish: function(eventName, args){
+        publish: function(eventName, payload){
             // summary:
             //          Publishes an event.
             // eventName:
             //          Name of the event.
-            // args:
+            // payload:
             //          Information for the event. For example, this could be 
             //          the information that goes along with a click event: 
             //          target, x/y coordinates, etc.
-            if(args.constructor != Array) args = [args];
-            this.socket.send(JSON.stringify([eventName, args]));
+            
+            this._sendEvent({name: eventName, payload: payload});
         },
         
         // Shortcut function for subscribe.
         sub: function(){ return this.subscribe.apply(this, Array.prototype.slice.call(arguments)); },
         // Shortcut function for unsubscribe.
         unsub: function(){ return this.unsubscribe.apply(this, Array.prototype.slice.call(arguments)); },
+        // Shortcut function for publish.
         pub: function pub(){ return this.publish.apply(this, Array.prototype.slice.call(arguments)); }
     };
 

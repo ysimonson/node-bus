@@ -45,7 +45,6 @@ function service(request, response){
         });
         
         request.addListener('end', function(chunk){
-            sys.puts("Connection end.");
             var fullData = data.join('');
             
             var event = JSON.parse(fullData);
