@@ -39,6 +39,11 @@
         //          Used to show current users.
         $userList: null,
         
+        // connectedUsers: Object
+        //          Stores flags for which users have connected or sent drawing 
+        //          messages, so we can handle logins as well.
+        connectedUsers: {},
+        
         // colorMap: Map
         //          Maps usernames to their associated colors
         colorMap: {},
@@ -57,6 +62,8 @@
             this.username = username;
             this.context = this.$canvas[0].getContext('2d');
             
+            this.connectedUsers[username] = true;
+            
             this.bus.pub("draw/login", {
                 username: this.username,
                 color: Math.round(0xffffff * Math.random())
@@ -71,6 +78,8 @@
             var color = '#' + event.color.toString(16);
             this.colorMap[event.username] = color;
             this.$userList.append('<li><span class="user_color" style="background-color: ' + color + ';"> </span>&nbsp;&nbsp;' + event.username + '</li>');
+            
+            this.connectedUsers[event.username] = true;
         },
         
         handleDraw: function(event){
@@ -79,6 +88,12 @@
             // event:
             //          Event object for the chat/message events.
             if(event.username != this.username) {
+                // if the user isn't on our user list, add them now
+                if(this.connectedUsers[event.username] !== true){
+                    event.color = Math.round(0xffffff * Math.random());
+                    this.handleLogin(event);
+                }
+            
                 var path = event.draw;
                 this.beginDrawing(path[0], path[1], event.username);
                 
