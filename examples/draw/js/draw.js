@@ -15,7 +15,8 @@
         $canvas.mouseup($.proxy(this.handleMouseUp, this));
         $canvas.mousemove($.proxy(this.handleMouseMove, this));
         
-        //$canvas[0].addEventListener('mousemove', this.handleMouseMove, false);
+        $canvas.attr('width', $(document).width());
+        $canvas.attr('height', $(document).height());
     }
     Draw.prototype = {
         // bus: Object
@@ -95,9 +96,7 @@
             //          The jquery event object.
             
             this.context.beginPath();
-            //this.context.strokeStyle = this.colorMap[this.username];
-            this.context.strokeStyle = 'red';
-            this.context.fillStyle = 'red';
+            this.context.strokeStyle = this.colorMap[this.username];
             this.context.moveTo(event.pageX, event.pageY);
             this.drawing = true;
         },
