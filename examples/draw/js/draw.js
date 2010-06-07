@@ -43,9 +43,10 @@
         //          Maps usernames to their associated colors
         colorMap: {},
         
-        // drawing: Boolean
-        //          Whether the mouse is currently down
-        drawing: false,
+        // curPath: Array
+        //          Contains points in the currently drawing path, or is null
+        //          if nothing is currently being drawn
+        curPath: null,
     
         login: function(username){
             // summary:
@@ -72,21 +73,19 @@
             this.$userList.append('<li><span class="user_color" style="background-color: ' + color + ';"> </span>&nbsp;&nbsp;' + event.username + '</li>');
         },
         
-        sendDraw: function(){
-            // summary:
-            //          Sends a message to the chat service.
-            // message: String
-            //          Message to send.
-            
-            this.bus.pub("draw/draw", {username: this.username, draw: draw});
-        },
-        
         handleDraw: function(event){
             // summary:
             //          Handles a reciept of a message from the chat service.
             // event:
             //          Event object for the chat/message events.
-            
+            if(event.username != this.username) {
+                var path = event.draw;
+                this.beginDrawing(path[0], path[1], event.username);
+                
+                for(var i=2, len=path.length; i<len; i+=2) {
+                    this.addToDrawing(path[i], path[i + 1]);
+                }
+            }
         },
         
         handleMouseDown: function(event){
@@ -94,11 +93,10 @@
             //          Handles mouse down events on the canvas.
             // event:
             //          The jquery event object.
-            
-            this.context.beginPath();
-            this.context.strokeStyle = this.colorMap[this.username];
-            this.context.moveTo(event.pageX, event.pageY);
-            this.drawing = true;
+            var x = event.pageX;
+            var y = event.pageY;
+            this.beginDrawing(x, y, this.username);
+            this.curPath = [x, y];
         },
         
         
@@ -109,9 +107,9 @@
             //          The jquery event object.
             
             this.context.closePath();
-            this.drawing = false;
+            this.bus.pub("draw/draw", {username: this.username, draw: this.curPath});
+            this.curPath = null;
         },
-        
         
         handleMouseMove: function(event){
             // summary:
@@ -119,10 +117,23 @@
             // event:
             //          The jquery event object.
             
-            if(this.drawing) {
-                this.context.lineTo(event.offsetX, event.offsetY);
-                this.context.stroke();
+            if(this.curPath) {
+                var x = event.pageX;
+                var y = event.pageY;
+                this.addToDrawing(x, y);
+                this.curPath.push(x, y);
             }
+        },
+        
+        beginDrawing: function(x, y, username) {
+            this.context.beginPath();
+            this.context.strokeStyle = this.colorMap[username];
+            this.context.moveTo(x, y);
+        },
+        
+        addToDrawing: function(x, y) {
+            this.context.lineTo(x, y);
+            this.context.stroke();
         }
     };
 
