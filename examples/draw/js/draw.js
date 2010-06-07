@@ -141,12 +141,26 @@
         },
         
         beginDrawing: function(x, y, username) {
+            // summary:
+            //          Begins drawing a path.
+            // x: Int
+            //          The starting x position.
+            // y: Int
+            //          The starting y position.
+            // username: String
+            //          The owner of the path (determines the color of the lines).
             this.context.beginPath();
             this.context.strokeStyle = this.colorMap[username];
             this.context.moveTo(x, y);
         },
         
         addToDrawing: function(x, y) {
+            // summary:
+            //          Adds a position to the current path.
+            // x: Int
+            //          The x position.
+            // y: Int
+            //          The y position.
             this.context.lineTo(x, y);
             this.context.stroke();
         }
