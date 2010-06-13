@@ -31,7 +31,7 @@
             var drawClient = null;
             
             $(function(){
-                drawClient = new Draw("http://localhost:8080/nodebus", $("#canvas"), $('#side_panel ul'));
+                drawClient = new Draw(window.location+"../../nodebus", $("#canvas"), $('#side_panel ul'));
             
                 $("#login_form").submit(function(e){
                     e.preventDefault();

@@ -47,9 +47,13 @@ function service(request, response){
         request.addListener('end', function(chunk){
             var fullData = data.join('');
             
-            var event = JSON.parse(fullData);
+            try{
+                var event = JSON.parse(fullData);
             
-            EventManager.publishEvent(event);
+                EventManager.publishEvent(event);
+            } catch (e){
+                sys.log("Invalid JSON Data: "+fullData);
+            }
         });
         
         response.writeHead(200);

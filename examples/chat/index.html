@@ -34,7 +34,7 @@
             var chatClient = null;
             
             $(function(){
-                chatClient = new Chat("http://localhost:8080/nodebus", $("#chat_messages"));
+                chatClient = new Chat(window.location+"../../nodebus", $("#chat_messages"));
             
                 $("#login_form").submit(function(e){
                     e.preventDefault();

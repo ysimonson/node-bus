@@ -158,9 +158,13 @@ WebSocketClient.prototype = {
             // remove the start character
             chunk = chunk.substr(1);
             
-            // parse the json and publish the event.
-            EventManager.publishEvent(JSON.parse(chunk));
-            //sys.puts("WebSocket Client #"+this.clientId+": "+chunk);
+            try{
+                // parse the json and publish the event.
+                EventManager.publishEvent(JSON.parse(chunk));
+                //sys.puts("WebSocket Client #"+this.clientId+": "+chunk);
+            } catch (e){
+                sys.log("Invalid JSON Data: "+chunk);
+            }
         }
     },
     
