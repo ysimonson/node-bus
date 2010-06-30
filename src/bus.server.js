@@ -51,13 +51,15 @@ function service(request, response){
                 var event = JSON.parse(fullData);
             
                 EventManager.publishEvent(event);
+                
+                response.writeHead(200);
             } catch (e){
                 sys.log("Invalid JSON Data: "+fullData);
+                response.writeHead(400);
             }
+            response.end();
         });
         
-        response.writeHead(200);
-        response.end();
     }
     return false;
 }
