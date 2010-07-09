@@ -6,28 +6,36 @@ var url = require('url');
 var sys = require('sys');
 var bus = require('../src/bus.server');
 
+var NODEBUS_PATTERN = /\/nodebus/;
+
 var dirHandler = router.staticDirHandler("../", "", ["index.html"]);
+var httpServer = http.createServer();
+var busServer = new bus.BusServer(httpServer, NODEBUS_PATTERN);
 
-var server = http.createServer();
-server.addListener('request', function (req, res) {
-
-    // todo: this is messy, we need to figure out a more elegant way of doing 
-    //  this.  doing bus.service here, and having the request handler in 
-    //  bus.initialize below seems to cause requests to try to get handled 
-    //  twice.
-    // Also, if i dont put this here for the GET requests, to call service.. 
-    //  it's like nothing gets called.
-    if(req.method === "GET"){
-        if((/\/nodebus/.test(req.url))){
-            bus.service(req, res);
-        } else {
-            return dirHandler(req,res);
-        }
+httpServer.addListener('request', function (req, res) {
+    if(req.method === "GET" && !NODEBUS_PATTERN.test(req.url)) {
+        return dirHandler(req, res);
     }
-    
-    return;
 });
 
-bus.initialize(server, /\/nodebus/);
+busServer.addListener('connect', function(endpoint, clientId) {
+    sys.puts('connect: ' + clientId);
+});
 
-server.listen(8080);
+busServer.addListener('close', function(endpoint, clientId) {
+    sys.puts('close: ' + clientId);
+});
+
+busServer.addListener('receive', function(clientId, json) {
+    sys.puts('receive: ' + clientId);
+});
+
+busServer.addListener('listen', function(clientId, eventName) {
+    sys.puts('listen: ' + clientId + ': ' + eventName);
+});
+
+busServer.addListener('unlisten', function(clientId, eventName) {
+    sys.puts('unlisten: ' + clientId + ': ' + eventName);
+});
+
+httpServer.listen(8080);
