@@ -83,14 +83,6 @@ function BusServer(httpServer, pattern) {
             }
         }
     };
-    
-    this._listenEvent = function(clientId, eventName) {
-        
-    };
-    
-    this._unlistenEvent = function(clientId, eventName) {
-        
-    };
 }
 
 sys.inherits(BusServer, events.EventEmitter);
