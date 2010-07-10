@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="node-bus" basedir="." default="build">
+	<property name="version" value="0.3a" />
+	<property name="build.dir" value="./build" />
+	
+    <!-- Taskdef for jsmin -->
+    <taskdef name="jsmin" classname="net.matthaynes.jsmin.JSMin_Task" classpath="./tools/jsmin.0.2.4.jar"/>
+    <loadfile property="copyright" srcFile="${basedir}/LICENSE"/>
+    
+    <echo>====================================================================
+    Project:        	${ant.project.name}
+    Version:        	${version}
+    Base Directory: 	${basedir}
+====================================================================</echo>
+    
+    <target name="build">
+        <mkdir dir="${build.dir}" />
+        
+        <!-- Minify node-bus stuff.. -->
+		<concat destfile="${build.dir}/bus.client.js" fixlastline="true" force="yes">
+			<string value="/*${copyright}*/" />
+			<path>
+                <pathelement location="./lib/node-comet/src/comet.client.js"/>
+	            <pathelement location="./src/bus.client.js"/>
+			</path>
+		</concat>
+    	<jsmin destdir="${build.dir}" srcfile="${build.dir}/bus.client.js" suffix="true" copyright="${copyright}" />
+    </target>
+</project>
