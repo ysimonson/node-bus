@@ -1,3 +1,3 @@
 [submodule "lib/node-comet"]
 	path = lib/node-comet
-	url = git://github.com/ysimonson/node-comet
+	url = git://github.com/node-bus/node-comet
