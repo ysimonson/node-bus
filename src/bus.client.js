@@ -32,7 +32,14 @@
             if(container) {
                 for(var i = 0, len = container.length; i < len; i++){
                     var sub = container[i];
-                    sub[1].apply(sub[0], [payload]);
+                    
+                    //Call wrapped in a setTimeout to provide "cooperative
+                    //multitasking" - the callback's execution will be delayed
+                    //if there are other things the browser wants to respond
+                    //to right now
+                    setTimeout(function() {
+                        sub[1].apply(sub[0], [payload]);
+                    }, 0);
                 }
             }
         },
