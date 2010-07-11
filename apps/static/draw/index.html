@@ -1,0 +1,48 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>node-bus draw</title>
+        <link rel="stylesheet" href="./css/main.css" media="all" />
+    </head>
+    <body>
+        
+        <div id="draw">
+            <div id="side_panel">
+                Connected clients:
+                <ul></ul>
+            </div>
+            <canvas id="canvas">
+                <p>Your browser does not support canvas :(</p>
+            </canvas>
+        </div>
+        
+        <div id="login">
+            <form id="login_form">
+                <label for="login_input">Username</label>
+                <input type="text" id="login_input" maxlength="50" />
+                <button type="submit">Login</button>
+            </form>
+        </div>
+        
+        <script src="/lib/jquery/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="/lib/bus.client.js" type="text/javascript" charset="UTF-8"></script>
+        <script type="text/javascript" src="./js/draw.js"></script>
+        <script type="text/javascript">
+            var drawClient = null;
+            
+            $(function(){
+                drawClient = new Draw(window.location+"../../nodebus", $("#canvas"), $('#side_panel ul'));
+            
+                $("#login_form").submit(function(e){
+                    e.preventDefault();
+                    var username = $("#login_input").val();
+                    drawClient.login(username);
+                    
+                    $("#login").fadeOut(function() {
+                        $('#draw').fadeIn();
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>

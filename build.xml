@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<project name="node-bus" basedir="." default="build">
+<project name="node-bus" basedir="." default="node-bus">
 	<property name="version" value="0.3a" />
 	<property name="build.dir" value="./build" />
 	
@@ -13,6 +13,10 @@
     Version:        	${version}
     Base Directory: 	${basedir}
 ====================================================================</echo>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
     
     <target name="build">
         <mkdir dir="${build.dir}" />
@@ -27,4 +31,8 @@
 		</concat>
     	<jsmin destdir="${build.dir}" srcfile="${build.dir}/bus.client.js" suffix="true" copyright="${copyright}" />
     </target>
+
+	<target name="node-bus" depends="clean,build">
+		<copy file="${build.dir}/bus.client.js" tofile="./apps/static/lib/bus.client.js" />
+	</target>
 </project>

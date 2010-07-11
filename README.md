@@ -24,18 +24,22 @@ Then run the build:
 Running the Test Server
 =======================
 
-Run the examples server:
+Run the server:
 
-    cd examples
+    cd apps
     sudo node server.js
 
-Then, navigate a browser to http://localhost:8080/examples/
-
-* Be sure to include the trailing slash in the URL
+Then, navigate a browser to http://localhost:8080/
 
 Versions (tags)
 ===============
 
 * v0.1a - Long-polling support for the client, and functioning server.  Chat example and the maintest test app.
+
 * v0.2a - Adding support for WebSocket graceful degradation to longpolling.
-* v0.3a - Moved communication logic into a separate project.
+
+* v0.3a - Major changes:
+  * Moved communication logic into a separate project.
+  * Added smart publishing (server only publishes to clients that have callbacks attached to the event)
+  * Created a collaborative drawing example
+
