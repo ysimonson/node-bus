@@ -17,6 +17,10 @@ git clone git@github.com:node-bus/node-bus.git --recursive
 cd node-bus
 git submodule update --init --recursive
 
+Then run the build:
+
+ant
+
 Running the Test Server
 =======================
 
