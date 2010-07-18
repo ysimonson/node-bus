@@ -27,7 +27,7 @@ Running the Test Server
 Run the server:
 
     cd apps
-    sudo node server.js
+    node server.js
 
 Then, navigate a browser to http://localhost:8080/
 
