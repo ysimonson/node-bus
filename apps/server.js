@@ -26,16 +26,16 @@ busServer.addListener('close', function(endpoint, clientId) {
     sys.puts('close: ' + clientId);
 });
 
-busServer.addListener('receive', function(clientId, json) {
-    sys.puts('receive: ' + clientId);
+busServer.addListener('receive', function(clientId, eventName, payload) {
+    sys.puts('receive: ' + clientId + ": " + eventName + ", " + payload);
 });
 
 busServer.addListener('listen', function(clientId, eventName) {
-    sys.puts('listen: ' + clientId + ': ' + eventName);
+    sys.puts('listen: ' + clientId + ": " + eventName);
 });
 
-busServer.addListener('unlisten', function(clientId, eventName) {
-    sys.puts('unlisten: ' + clientId + ': ' + eventName);
+busServer.addListener('unlisten', function(clientId, eventName, payload) {
+    sys.puts('unlisten: ' + clientId + ": " + eventName);
 });
 
 httpServer.listen(8080);

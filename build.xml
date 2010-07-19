@@ -26,6 +26,7 @@
 			<string value="/*${copyright}*/" />
 			<path>
                 <pathelement location="./lib/node-comet/src/comet.client.js"/>
+	            <pathelement location="./src/util.js"/>
 	            <pathelement location="./src/bus.client.js"/>
 			</path>
 		</concat>

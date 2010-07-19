@@ -5,12 +5,11 @@
         //          bus.client.js is already in the dom.
         // url: (string)
         //          URL (relative or absolute) to the node-bus service.
-        
         this.bus = new Bus(host);
         this.$messages = $messages;
         
-        this.bus.sub("chat/login", this, this.handleLogin);
-        this.bus.sub("chat/message", this, this.handleMessage);
+        this.bus.subscribe("chat/login", this, this.handleLogin);
+        this.bus.subscribe("chat/message", this, this.handleMessage);
     }
     Chat.prototype = {
         // bus: Object
@@ -50,7 +49,6 @@
             //          Sends a message to the chat service.
             // message: String
             //          Message to send.
-            
             this.bus.pub("chat/message", {username: this.username, message: message});
         },
         
