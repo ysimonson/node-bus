@@ -34,12 +34,21 @@ Then, navigate a browser to http://localhost:8080/
 Versions (tags)
 ===============
 
-* v0.1a - Long-polling support for the client, and functioning server.  Chat example and the maintest test app.
+* v0.1a - Long-polling support for the client, and functioning server.  Chat
+  example and the maintest test app.
 
 * v0.2a - Adding support for WebSocket graceful degradation to longpolling.
 
 * v0.3a - Major changes:
   * Moved communication logic into a separate project.
-  * Added smart publishing (server only publishes to clients that have callbacks attached to the event)
+  * Added smart publishing (server only publishes to clients that have
+    callbacks attached to the event)
   * Created a collaborative drawing example
+
+* v0.4a - Major changes:
+  * Increased performance in unsubscribing by using objects for storing
+    subscription handlers rather than arrays.
+  * Modularized much of the code base so that subscription handling is shared
+    between the client/server.
+  * Started work on transformers.
 
