@@ -62,7 +62,7 @@
             var results = this.pubsub.unsubscribe(handle);
             
             if(results.isLastSubscription) {
-                this.publish('__node-bus__/unlisten', eventName);
+                this.publish('__node-bus__/unlisten', handle.eventName);
             }
             
             return results.removed;

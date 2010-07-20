@@ -376,6 +376,7 @@ function TransformerEngine() {
 
 function PubSubClient() {
     this.subscriptions = {};
+    this.lastHandleId = 0;
     
     this.subscribe = function(eventName /*, scope (optional), callback*/) {
         // summary:
@@ -411,22 +412,31 @@ function PubSubClient() {
         if(!container) {
             //This is the first callback associated with the event; notify
             //the server
-            this.subscriptions[eventName] = container = [];
+            this.subscriptions[eventName] = container = {};
             isFirstSubscription = true;
         }
 
         //Add the listener to the container and return it to allow for
         //future unsubscriptions
-        var callee = [scope, callback];
-        container.push(callee);
+        var handleId = this.lastHandleId++;
+        container[handleId] = [scope, callback];
 
         return {
             isFirstSubscription: isFirstSubscription,
-            handler: {eventName: eventName, callee: callee}
+            handle: {eventName: eventName, handleId: handleId}
         };
     };
     
     this.unsubscribe = function(handle) {
+        // summary:
+        //          Unsubscribes from an event.
+        // handle: Object
+        //          The object to unsubscribe.
+        // return:
+        //          Whether or not the unsubscribe action was successful.  
+        //          If the function and scope were not found as a listener 
+        //          to the event, false will be returned.
+        
         //Find the container for the subscription
         var results = {
             isLastSubscription: false,
@@ -435,30 +445,19 @@ function PubSubClient() {
 
         var container = this.subscriptions[handle.eventName];
         if(!container) return results;
-
-        //What to search for in the container
-        var callee = handle.callee;
-
-        for(var i=0, len=container.length; i<len; i++) {
-            var item = container[i];
-
-            //If the item is found...
-            if(item === callee) {
-                //Cut it out
-                container.splice(i, 1);
-
-                if(container.length == 0) {
-                    //Perform a hard-core delete to prevent memory leaks
-                    results.isLastSubscription = true;
-                    delete this.subscriptions[handle.eventName];
-                }
-
-                delete item;
-                results.removed = true;
-                return results;
+        
+        if(handle.handleId in container) {
+            delete container[handle.handleId];
+            
+            results.removed = true;
+            results.isLastSubscription = true;
+            
+            for(var key in container) {
+                results.isLastSubscription = false;
+                break;
             }
         }
-
+        
         return results;
     };
     
@@ -467,19 +466,19 @@ function PubSubClient() {
         var payload = [payload];
 
         if(container) {
-            for(var i = 0, len = container.length; i < len; i++){
-                var sub = container[i];
-
+            for(var key in container) { 
+                var value = container[key];
+                
                 //Call wrapped in a setTimeout to provide "cooperative
                 //multitasking" - the callback's execution will be delayed
                 //if there are other things the browser wants to respond
                 //to right now
                 setTimeout(function() {
-                    sub[1].apply(sub[0], payload);
+                    value[1].apply(value[0], payload);
                 }, 0);
             }
         }
-    }
+    };
 }
 
 //Try to export the public members for node.js. This will fail in a browser
@@ -513,6 +512,10 @@ try {
         // pubsub: Object
         //          Instance of the pubsub client.
         pubsub: null,
+        
+        // transformers: Object
+        //          Instance of the transformation engine. 
+        transformers: new TransformerEngine(),
         
         subscribe: function(eventName /*, scope (optional), callback*/){
             // summary:
@@ -548,7 +551,7 @@ try {
             var results = this.pubsub.unsubscribe(handle);
             
             if(results.isLastSubscription) {
-                this.publish('__node-bus__/unlisten', eventName);
+                this.publish('__node-bus__/unlisten', handle.eventName);
             }
             
             return results.removed;

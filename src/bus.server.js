@@ -41,23 +41,9 @@ function BusServer(httpServer, pattern) {
             } else if(specialEventName == '/unlisten') {
                 self.emit('unlisten', clientId, payload);
             }
-        } else {
-            var cometServer = self.cometServer;
-            var clientContainer = self.subscriptions[eventName];
-
-            if(clientContainer) {
-                var message = {
-                    name: eventName,
-                    payload: payload
-                };
-
-                for(var subscribedClientId in clientContainer) {
-                    cometServer.send(subscribedClientId, message);
-                }
-            }
-
-            self.pubsub.fireEvent(eventName, payload);
         }
+        
+        self.pubsub.fireEvent(eventName, payload);
     };
     
     /*this.registerTransformer = function(transformer) {
@@ -74,39 +60,35 @@ function BusServer(httpServer, pattern) {
     };
     
     this.unsubscribe = function(handle) {
-        // summary:
-        //          Unsubscribes from an event.
-        // handle: Object
-        //          The object to unsubscribe.
-        // return:
-        //          Whether or not the unsubscribe action was successful.  
-        //          If the function and scope were not found as a listener 
-        //          to the event, false will be returned.
-        
         var results = self.pubsub.unsubscribe(handle);
         return results.removed;
     };
     
     this.addListener('listen', function(clientId, eventName) {
-        var container = self.subscriptions[eventName];
-        if(!container) self.subscriptions[eventName] = container = [];
+        var container = self.clientSubscriptions[clientId];
+        if(!container) self.clientSubscriptions[clientId] = container = {};
         
-        var clientContainer = self.clientSubscriptions[clientId];
-        if(!clientContainer) self.clientSubscriptions[clientId] = clientContainer = {};
+        var callback = function(payload) {
+            self.cometServer.send(clientId, {
+                name: eventName,
+                payload: payload
+            });
+        };
         
-        container[clientId] = null;
-        clientContainer[eventName] = null;
+        container[eventName] = self.pubsub.subscribe(eventName, callback);
     });
 
     this.addListener('unlisten', function(clientId, eventName) {
-        var container = self.subscriptions[eventName];
-        if(!container) self.subscriptions[eventName] = container = [];
+        var container = self.clientSubscriptions[clientId];
         
-        var clientContainer = self.clientSubscriptions[clientId];
-        if(!clientContainer) self.clientSubscriptions[clientId] = clientContainer = {};
-        
-        delete container[clientId];
-        delete clientContainer[eventName];
+        if(container) {
+            var handle = container[eventName];
+            
+            if(handle) {
+                self.pubsub.unsubscribe(handle);
+                delete container[eventName];
+            }
+        }
     });
     
     this.cometServer.addListener('connect', function(endpoint, clientId) {
@@ -116,14 +98,13 @@ function BusServer(httpServer, pattern) {
     this.cometServer.addListener('close', function(endpoint, clientId) {
         self.emit('close', endpoint, clientId);
         
-        var clientContainer = self.clientSubscriptions[clientId];
+        var container = self.clientSubscriptions[clientId];
+        var pubsub = self.pubsub;
         
-        if(clientContainer) {
-            var subscriptions = self.subscriptions;
-            
-            for(var eventName in clientContainer) {
-                var container = subscriptions[eventName];
-                delete container[clientId];
+        if(container) {
+            for(var eventName in container) {
+                var handle = container[eventName];
+                pubsub.unsubscribe(handle);
             }
             
             delete self.clientSubscriptions[clientId];

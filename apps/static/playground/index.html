@@ -50,6 +50,7 @@
             
             $(function() {
                 $eventTableBody = $('#eventTable tbody');
+				$subscriptions = $('#subscriptions');
                 
                 /**
                  * Setup Publish fieldset.
@@ -92,9 +93,7 @@
                     };
                     
                     var handle = bus.subscribe(eventName, callback);
-                    
                     if(handle){
-                        if(!$subscriptions) $subscriptions = $('#subscriptions');
                         $subscriptions.append('<li class="subscription">'+eventName+' <a href="#" class="'+eventName+'">Unsubscribe</a></li>');
                         $('a.' + eventName).click(function(e) {
                             e.preventDefault();
