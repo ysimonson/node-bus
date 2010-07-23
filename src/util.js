@@ -2,6 +2,14 @@ function TransformerEngine() {
     this.transformers = [];
     
     this.process = function(obj) {
+        // summary:
+        //          Processes an object, running it against each of the
+        //          transformers.
+        // obj: Object
+        //          The object to transform.
+        // return: 
+        //          The transformed object.
+        
         var transformers = this.transformers;
         
         for(var i=0, len=transformers.length; i<len; i++) {
@@ -14,12 +22,19 @@ function TransformerEngine() {
     };
     
     this.register = function(transformer) {
+        // summary:
+        //          Registers a new transformer.
+        // transformer: Function
+        //          The transformer to register.
         this.transformers.append(transformer);
     };
 }
 
 function PubSubClient() {
+    //Nested map of eventName => (handlerKey => handler)
     this.subscriptions = {};
+    
+    //The last handler key that was registered
     this.lastHandleId = 0;
     
     this.subscribe = function(eventName /*, scope (optional), callback*/) {
@@ -106,6 +121,14 @@ function PubSubClient() {
     };
     
     this.fireEvent = function(eventName, payload) {
+        // summary:
+        //          Fires an event, running all of the associated callbacks
+        //          asynchronously.
+        // eventName: String
+        //          The name of the event.
+        // payload: Object
+        //          The payload (arguments) associated with the event.
+        
         var container = this.subscriptions[eventName];
         var payload = [payload];
 
