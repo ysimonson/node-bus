@@ -1,3 +1,21 @@
 [submodule "lib/node-comet"]
 	path = lib/node-comet
 	url = git://github.com/node-bus/node-comet
+[submodule "lib/socket.io"]
+	path = lib/socket.io
+	url = http://github.com/LearnBoost/Socket.IO.git
+[submodule "socket.io-node"]
+	path = socket.io-node
+	url = http://github.com/LearnBoost/Socket.IO-node.git
+[submodule "lib/socket.io-node"]
+	path = lib/socket.io-node
+	url = http://github.com/LearnBoost/Socket.IO-node.git
+[submodule "src/server/lib/socket.io-node"]
+	path = src/server/lib/socket.io-node
+	url = http://github.com/LearnBoost/Socket.IO-node.git
+[submodule "src/client/lib/socket.io-node"]
+	path = src/client/lib/socket.io-node
+	url = http://github.com/LearnBoost/Socket.IO.git
+[submodule "src/client/lib/socket.io"]
+	path = src/client/lib/socket.io
+	url = http://github.com/LearnBoost/Socket.IO.git
