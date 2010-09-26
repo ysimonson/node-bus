@@ -25,13 +25,14 @@
         </div>
         
         <script src="/lib/jquery/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
-        <script src="/lib/bus.client.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="/lib/node-bus/socket.io/socket.io.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="/lib/node-bus/bus.client.js" type="text/javascript" charset="UTF-8"></script>
         <script type="text/javascript" src="./js/draw.js"></script>
         <script type="text/javascript">
             var drawClient = null;
             
             $(function(){
-                drawClient = new Draw(window.location+"../../nodebus", $("#canvas"), $('#side_panel ul'));
+                drawClient = new Draw($("#canvas"), $('#side_panel ul'));
             
                 $("#login_form").submit(function(e){
                     e.preventDefault();

@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <project name="node-bus" basedir="." default="node-bus">
-	<property name="version" value="0.3a" />
+	<property name="version" value="0.5a" />
 	<property name="build.dir" value="./build" />
+	<property name="client.build.dir" value="${build.dir}/client" />
+	<property name="server.build.dir" value="${build.dir}/server" />
 	
     <!-- Taskdef for jsmin -->
     <taskdef name="jsmin" classname="net.matthaynes.jsmin.JSMin_Task" classpath="./tools/jsmin.0.2.4.jar"/>
@@ -17,23 +19,59 @@
 	<target name="clean">
 		<delete dir="${build.dir}" />
 	</target>
+	
+	<target name="buildClient">
+		<mkdir dir="${client.build.dir}" />
+		
+		<concat destfile="${client.build.dir}/bus.client.js" fixlastline="true" force="yes">
+			<string value="/*${copyright}*/" />
+			<path>
+	            <pathelement location="./src/shared/util.js"/>
+	            <pathelement location="./src/client/bus.client.js"/>
+			</path>
+		</concat>
+    	<jsmin destdir="${client.build.dir}" srcfile="${client.build.dir}/bus.client.js" suffix="true" copyright="${copyright}" />
+
+		<copy todir="${client.build.dir}/socket.io/">
+			<fileset dir="./src/client/lib/socket.io/">
+				<include name="*.js" />
+				<include name="lib/**" />
+			</fileset>
+		</copy>
+	</target>
+	
+	<target name="buildServer">
+		<mkdir dir="${server.build.dir}" />
+		
+		<concat destfile="${server.build.dir}/bus.server.js" fixlastline="true" force="yes">
+			<string value="/*${copyright}*/" />
+			<path>
+	            <pathelement location="./src/shared/util.js"/>
+	            <pathelement location="./src/server/bus.server.js"/>
+			</path>
+		</concat>
+		
+		<copy todir="${server.build.dir}/socket.io">
+			<fileset dir="./src/server/lib/socket.io-node/">
+				<include name="*.js" />
+				<include name="lib/**" />
+			</fileset>
+		</copy>
+	</target>
     
     <target name="build">
         <mkdir dir="${build.dir}" />
-        
-        <!-- Minify node-bus stuff.. -->
-		<concat destfile="${build.dir}/bus.client.js" fixlastline="true" force="yes">
-			<string value="/*${copyright}*/" />
-			<path>
-                <pathelement location="./lib/node-comet/src/comet.client.js"/>
-	            <pathelement location="./src/util.js"/>
-	            <pathelement location="./src/bus.client.js"/>
-			</path>
-		</concat>
-    	<jsmin destdir="${build.dir}" srcfile="${build.dir}/bus.client.js" suffix="true" copyright="${copyright}" />
+		<antcall target="buildClient" />
+		<antcall target="buildServer" />
     </target>
 
 	<target name="node-bus" depends="clean,build">
-		<copy file="${build.dir}/bus.client.js" tofile="./apps/static/lib/bus.client.js" />
+		<copy todir="./apps/static/lib/node-bus">
+			<fileset dir="${client.build.dir}" />
+		</copy>
+		
+		<copy todir="./apps/lib/node-bus">
+			<fileset dir="${server.build.dir}" />
+		</copy>
 	</target>
 </project>

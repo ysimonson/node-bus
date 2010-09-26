@@ -1,11 +1,11 @@
 (function(){
-    function Chat(host, $messages){
+    function Chat($messages){
         // summary:
         //          Creates a new instance of a Chat client. Assumes that 
         //          bus.client.js is already in the dom.
         // url: (string)
         //          URL (relative or absolute) to the node-bus service.
-        this.bus = new Bus(host);
+        this.bus = new Bus(window.location.hostname, window.location.port, '/lib/node-bus');
         this.$messages = $messages;
         
         this.bus.subscribe("chat/login", this, this.handleLogin);

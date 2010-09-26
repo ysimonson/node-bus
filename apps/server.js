@@ -4,7 +4,7 @@ var router = require('./lib/node-router');
 var http = require('http');
 var url = require('url');
 var sys = require('sys');
-var bus = require('../src/bus.server');
+var bus = require('./lib/node-bus/bus.server');
 
 var NODEBUS_PATTERN = /\/nodebus/;
 
@@ -18,24 +18,16 @@ httpServer.addListener('request', function (req, res) {
     }
 });
 
-busServer.addListener('connect', function(endpoint, clientId) {
-    sys.puts('connect: ' + clientId);
-});
-
-busServer.addListener('close', function(endpoint, clientId) {
-    sys.puts('close: ' + clientId);
-});
-
 busServer.addListener('receive', function(clientId, eventName, payload) {
-    sys.puts('receive: ' + clientId + ": " + eventName + ", " + payload);
+    sys.puts('receive: ' + eventName + ", " + payload);
 });
 
 busServer.addListener('listen', function(clientId, eventName) {
-    sys.puts('listen: ' + clientId + ": " + eventName);
+    sys.puts('listen: ' + eventName);
 });
 
 busServer.addListener('unlisten', function(clientId, eventName, payload) {
-    sys.puts('unlisten: ' + clientId + ": " + eventName);
+    sys.puts('unlisten: ' + eventName);
 });
 
 httpServer.listen(8080);

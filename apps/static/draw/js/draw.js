@@ -1,10 +1,10 @@
 (function(){
-    function Draw(host, $canvas, $userList){
+    function Draw($canvas, $userList){
         // summary:
         //          Creates a new instance of a Draw client. Assumes that 
         //          bus.client.js is already in the dom.
         
-        this.bus = new Bus(host);
+        this.bus = new Bus(window.location.hostname, window.location.port, 'lib/node-bus');
         this.$canvas = $canvas;
         this.$userList = $userList;
         

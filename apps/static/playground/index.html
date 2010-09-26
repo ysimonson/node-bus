@@ -42,9 +42,10 @@
         </table>
         
         <script src="/lib/jquery/jquery-1.4.2.js" type="text/javascript" charset="UTF-8"></script>
-        <script src="/lib/bus.client.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="/lib/node-bus/socket.io/socket.io.js" type="text/javascript" charset="UTF-8"></script>
+        <script src="/lib/node-bus/bus.client.js" type="text/javascript" charset="UTF-8"></script>
         <script type="text/javascript">
-            var bus = new Bus('http://localhost:8080/nodebus');
+            var bus = new Bus(window.location.hostname, window.location.port, '/lib/node-bus');
             var $eventTableBody = null;  
             var $subscriptions = null;
             
